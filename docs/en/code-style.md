@@ -63,7 +63,7 @@ See `docs/logging-spec.md`
 ## Import Grouping
 
 1. Standard library (`std::`)
-2. Third-party libraries (`tokio::`, `rquest::`)
+2. Third-party libraries (`tokio::`, `wreq::`)
 3. Internal modules (`crate::`)
 4. Local uses (`super`, `self`)
 

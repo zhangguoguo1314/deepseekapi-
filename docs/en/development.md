@@ -4,7 +4,7 @@
 
 - Rust **1.95.0+** (see `rust-toolchain.toml`)
 - Bun **1.3+** (for web panel development and build)
-- `cmake`, `g++`, `libclang-dev` (required to compile BoringSSL for `rquest`)
+- `cmake`, `g++`, `libclang-dev` (required to compile BoringSSL for `wreq`)
 - `just` command runner (used for `just serve` / `just check` etc.)
 
 ## First-time Setup

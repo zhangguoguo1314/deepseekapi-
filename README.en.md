@@ -187,7 +187,7 @@ On first visit, you'll be guided to set an admin password (stored as bcrypt hash
 
 **A single `config.toml` reflects all runtime state.** Admin panel changes are instantly persisted to `config.toml` and hot-reloaded into the running service.
 
-**No unnecessary runtime system dependencies.** The project prioritizes pure Rust or statically-linked dependencies (e.g., `rustls` → `rquest` with BoringSSL), ensuring a single binary with no external `.so`/`.dll` requirements — download and run.
+**No unnecessary runtime system dependencies.** The project prioritizes pure Rust or statically-linked dependencies (e.g., `rustls` → `wreq` with BoringSSL), ensuring a single binary with no external `.so`/`.dll` requirements — download and run.
 
 ### Architecture Diagram
 

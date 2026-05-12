@@ -17,7 +17,7 @@ Rust API proxy exposing free DeepSeek model endpoints. Translates standard OpenA
 - `wasmtime` — executes DeepSeek's PoW WASM solver; the entire PoW system depends on this
 - `tiktoken-rs` — client-side prompt token counting (DeepSeek returns 0 for `prompt_tokens`)
 - `pin-project-lite` — underpins every streaming response wrapper (`SseStream`, `StateStream`, etc.)
-- `axum` / `rquest` — HTTP server and client respectively; `rquest` uses BoringSSL with Chrome 136 TLS fingerprint for WAF bypass
+- `axum` / `wreq` — HTTP server and client respectively; `wreq` uses BoringSSL with Chrome 136 TLS fingerprint for WAF bypass
 - `tokio` with `signal` feature — async runtime with graceful shutdown on SIGTERM/SIGINT
 
 ---
@@ -388,7 +388,7 @@ Follow `docs/code-style.md`:
 |-------|---------|--------------------|
 | WASM load failure | `PowError::Execution` on startup | DeepSeek recompiled WASM. PowSolver now uses dynamic export probing (no hardcoded symbols). Update `wasm_url` in `config.toml` if WASM URL changed |
 | WAF blocking (non-US) | AWS WAF Challenge response (status 202) | Configure a non-US proxy in `config.toml` `[proxy]` |
-| WAF blocking (fingerprint) | HTTP 403 or connection reset | `rquest` with BoringSSL automatically emulates Chrome 136 TLS fingerprint. If blocked, try updating `rquest` or switching emulation profile |
+| WAF blocking (fingerprint) | HTTP 403 or connection reset | `wreq` with BoringSSL automatically emulates Chrome 136 TLS fingerprint. If blocked, try updating `wreq` or switching emulation profile |
 | Account init failure | All accounts stuck in init | Bad credentials (login fails first) or rate-limited (too many sessions). Check `[accounts]` in config |
 | Tool call parse failure | No `tool_calls` in response, raw XML visible | Model output a tag variant not in the parse list. Add fallback `extra_starts`/`extra_ends` in `config.toml` `[deepseek]` |
 | Rate limited | Repeated `CoreError::Overloaded` | Add more accounts or reduce concurrency. 6x exponential backoff handles transient spikes |

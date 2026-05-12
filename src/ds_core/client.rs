@@ -9,11 +9,11 @@
 use bytes::Bytes;
 use futures::{Stream, TryStreamExt};
 use log::warn;
-use rquest::multipart::{Form, Part};
-use rquest_util::Emulation;
 use serde::{Deserialize, Serialize};
 use std::pin::Pin;
 use thiserror::Error;
+use wreq::multipart::{Form, Part};
+use wreq_util::Emulation;
 
 // API 端点常量
 const ENDPOINT_USERS_LOGIN: &str = "/users/login";
@@ -33,7 +33,7 @@ const ENDPOINT_FILE_FETCH: &str = "/file/fetch_files";
 pub enum ClientError {
     /// HTTP 层错误（网络、超时、DNS 等）
     #[error("HTTP error: {0}")]
-    Http(#[from] rquest::Error),
+    Http(#[from] wreq::Error),
 
     /// HTTP 状态码非 2xx
     #[error("HTTP status {status}: {body}")]
@@ -221,7 +221,7 @@ pub struct StopStreamPayload {
 }
 
 /// Check if a response is an AWS WAF Challenge (US IP restriction)
-fn is_waf_challenge(resp: &rquest::Response) -> bool {
+fn is_waf_challenge(resp: &wreq::Response) -> bool {
     resp.status().as_u16() == 202 && resp.headers().get("x-amzn-waf-action").is_some()
 }
 
@@ -242,7 +242,7 @@ fn print_waf_hint() {
 
 #[derive(Clone)]
 pub struct DsClient {
-    http: rquest::Client,
+    http: wreq::Client,
     api_base: String,
     wasm_url: String,
     user_agent: String,
@@ -261,8 +261,8 @@ impl DsClient {
         client_locale: String,
         proxy_url: Option<&str>,
     ) -> Self {
-        let mut builder = rquest::Client::builder().emulation(Emulation::Chrome136);
-        if let Some(url) = proxy_url.and_then(|u| rquest::Proxy::all(u).ok()) {
+        let mut builder = wreq::Client::builder().emulation(Emulation::Chrome136);
+        if let Some(url) = proxy_url.and_then(|u| wreq::Proxy::all(u).ok()) {
             builder = builder.proxy(url);
         }
         Self {
@@ -276,31 +276,31 @@ impl DsClient {
         }
     }
 
-    fn auth_headers(&self, token: &str) -> Result<rquest::header::HeaderMap, ClientError> {
-        let mut h = rquest::header::HeaderMap::new();
+    fn auth_headers(&self, token: &str) -> Result<wreq::header::HeaderMap, ClientError> {
+        let mut h = wreq::header::HeaderMap::new();
         h.insert(
-            rquest::header::USER_AGENT,
-            rquest::header::HeaderValue::from_str(&self.user_agent)
+            wreq::header::USER_AGENT,
+            wreq::header::HeaderValue::from_str(&self.user_agent)
                 .map_err(|e| ClientError::InvalidHeader(format!("User-Agent: {e}")))?,
         );
         h.insert(
-            rquest::header::AUTHORIZATION,
-            rquest::header::HeaderValue::from_str(&format!("Bearer {token}"))
+            wreq::header::AUTHORIZATION,
+            wreq::header::HeaderValue::from_str(&format!("Bearer {token}"))
                 .map_err(|e| ClientError::InvalidHeader(format!("Authorization: {e}")))?,
         );
         h.insert(
             "X-Client-Version",
-            rquest::header::HeaderValue::from_str(&self.client_version)
+            wreq::header::HeaderValue::from_str(&self.client_version)
                 .map_err(|e| ClientError::InvalidHeader(format!("X-Client-Version: {e}")))?,
         );
         h.insert(
             "X-Client-Platform",
-            rquest::header::HeaderValue::from_str(&self.client_platform)
+            wreq::header::HeaderValue::from_str(&self.client_platform)
                 .map_err(|e| ClientError::InvalidHeader(format!("X-Client-Platform: {e}")))?,
         );
         h.insert(
             "X-Client-Locale",
-            rquest::header::HeaderValue::from_str(&self.client_locale)
+            wreq::header::HeaderValue::from_str(&self.client_locale)
                 .map_err(|e| ClientError::InvalidHeader(format!("X-Client-Locale: {e}")))?,
         );
         Ok(h)
@@ -310,18 +310,18 @@ impl DsClient {
         &self,
         token: &str,
         pow_response: &str,
-    ) -> Result<rquest::header::HeaderMap, ClientError> {
+    ) -> Result<wreq::header::HeaderMap, ClientError> {
         let mut h = self.auth_headers(token)?;
         h.insert(
             "X-Ds-Pow-Response",
-            rquest::header::HeaderValue::from_str(pow_response)
+            wreq::header::HeaderValue::from_str(pow_response)
                 .map_err(|e| ClientError::InvalidHeader(format!("X-Ds-Pow-Response: {e}")))?,
         );
         Ok(h)
     }
 
     async fn parse_envelope<T: serde::de::DeserializeOwned>(
-        resp: rquest::Response,
+        resp: wreq::Response,
     ) -> Result<T, ClientError> {
         let status = resp.status();
         if !status.is_success() {
@@ -336,10 +336,10 @@ impl DsClient {
     }
 
     pub async fn login(&self, payload: &LoginPayload) -> Result<LoginData, ClientError> {
-        let mut h = rquest::header::HeaderMap::new();
+        let mut h = wreq::header::HeaderMap::new();
         h.insert(
-            rquest::header::USER_AGENT,
-            rquest::header::HeaderValue::from_str(&self.user_agent)
+            wreq::header::USER_AGENT,
+            wreq::header::HeaderValue::from_str(&self.user_agent)
                 .map_err(|e| ClientError::InvalidHeader(format!("User-Agent: {e}")))?,
         );
         let resp = self

@@ -185,7 +185,7 @@ tool_call.extra_ends = ["<|tool_call_end|>", "</tool_calls>", "</tool_call>"]
 
 **一个 `config.toml` 反映所有运行状态**。管理面板对配置的修改即时持久化到 `config.toml`，同时热重载到运行中的服务。
 
-**非必要不引入额外运行时系统依赖**。项目始终优先选择纯 Rust 或静态链接的依赖（如 `rustls` → `rquest` + BoringSSL），确保编译产物单一二进制无外部 `.so`/`.dll` 依赖，下载即用。
+**非必要不引入额外运行时系统依赖**。项目始终优先选择纯 Rust 或静态链接的依赖（如 `rustls` → `wreq` + BoringSSL），确保编译产物单一二进制无外部 `.so`/`.dll` 依赖，下载即用。
 
 
 ### 简要架构图：

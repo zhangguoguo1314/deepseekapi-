@@ -4,7 +4,7 @@
 
 - Rust **1.95.0+**（见 `rust-toolchain.toml`）
 - Bun **1.3+**（Web 面板构建与开发）
-- `cmake`、`g++`、`libclang-dev`（编译 `rquest` 依赖的 BoringSSL）
+- `cmake`、`g++`、`libclang-dev`（编译 `wreq` 依赖的 BoringSSL）
 - `just` 命令运行器（用于 `just serve` / `just check` 等快捷命令）
 
 ## 首次启动
