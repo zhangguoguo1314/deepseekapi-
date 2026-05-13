@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.7-pre1] - 2026-05-14
+
+### Fix: 主要修复因为官方限制expert模型的上传文件导致的问题, 以及其他的一些修改
+
+主要原因是网页端的单次输入有 `input_character_limits`, 所以是通过一个文件包含长上下文下的历史对话。这次官方限制了expert的文件上传, 并且是内部静默忽略不报错导致不会执行回退, 所以导致了expert的使用异常。
+
+目前的解决方案是:
+
+- default、vision采用原来的模式, 但是需要超过 `input_character_limits * 75 / 100` 的限制时才触发历史文件, 否则依旧一致请求;
+- expert采用新的分块completion模式同样在超过限制时触发, completion_1带一部分历史, 然后立即stop_stream, 不让模型实际输出, 再开始 completion_2, 以此类推直到完成完整历史对话拼接。这样的实现感觉问题有点大, 如果有更好的想法欢迎提issue或pr。
+
+> 还有有些账号还没有开放vision测试, 可能会导致vision请求出现空回复的问题
+
+---
+
+- [x] 合并并修复 PR #52，采用 Co-Authored-By 机制（Web 英文版）
+- [x] 实施更严格的 Lint 检查
+- [x] 补充测试账号
+- [x] 将前端默认开发运行时切换为 Bun
+- [x] 处理 PR #63：当 `message_start` 后上游出错时，补发 `message_delta` 与 `message_stop`，防止客户端挂死
+- [x] 将变量名由 `rquest` 重构为 `wreq`，并更新相关依赖
+- [x] 合并处理 PR #66
+- [x] 对齐最新的流式处理逻辑，并修复若干相关问题
+- [x] 合并处理 PR #67，实现前端颜色主题切换
+- [ ] 实现 Issue #65 所述的 `v1/files` 端点，为视觉模型提供必要的 `model_type` 支持
+- [x] 修复专家模式下的问题
+- [x] 实现 `model_type: vision` 并同步更新网页端 API
+  - [x] 测试 `search_enabled` 参数，确认后端是否会默认忽略
+  - [x] 添加端到端测试
+- [ ] 排查 Issue #58 中出现的异常字符
+- [ ] 将 Issue #53 中的 `<｜End▁of▁sentence｜>` 设置为内部强制结束标记，解决模型错误生成用户回答的幻觉问题
+- [ ] 处理 Issue #56 中 qwenpaw 相关问题，预计需将 OpenAI 适配器的空工具调用保活机制替换为空思考块
+- [ ] 添加项目更新提醒
+- [ ] 将 [DeepSeek 服务状态页](https://status.deepseek.com/) 纳入提醒列表
+- [ ] 实现 response 端点
+
 ## [0.2.6] - 2026-05-05
 
 ### Added
