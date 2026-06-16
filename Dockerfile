@@ -1,12 +1,27 @@
 # 构建阶段
 FROM rust:1.95-alpine AS builder
 
-RUN apk add --no-cache musl-dev openssl-dev pkgconfig
+# 安装构建依赖
+RUN apk add --no-cache \
+    musl-dev \
+    openssl-dev \
+    pkgconfig \
+    cmake \
+    clang \
+    llvm-dev \
+    linux-headers \
+    git \
+    perl
 
 WORKDIR /app
 
 # 复制完整源码
 COPY . .
+
+# 设置环境变量
+ENV OPENSSL_DIR=/usr \
+    OPENSSL_INCLUDE_DIR=/usr/include/openssl \
+    OPENSSL_LIB_DIR=/usr/lib
 
 # 构建 release 版本
 RUN cargo build --release
@@ -14,7 +29,7 @@ RUN cargo build --release
 # 运行阶段
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates libssl3
 
 WORKDIR /app
 
