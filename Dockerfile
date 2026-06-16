@@ -11,25 +11,24 @@ RUN bun install --frozen-lockfile
 COPY web/ .
 RUN bun run build
 
-# Rust 构建阶段
-FROM rust:1.95-alpine AS rust-builder
+# Rust 构建阶段 - 使用 Debian 基础镜像（Alpine 缺少 libclang）
+FROM rust:1.95-slim-bookworm AS rust-builder
 
-# 安装构建依赖（boring-sys 需要 cmake/make/clang/libclang）
-RUN apk add --no-cache \
-    musl-dev \
-    openssl-dev \
-    pkgconfig \
+# 安装构建依赖
+RUN apt-get update && apt-get install -y \
+    musl-tools \
+    libssl-dev \
+    pkg-config \
     cmake \
     make \
     clang \
-    clang-dev \
-    libclang \
+    libclang-dev \
     llvm-dev \
-    linux-headers \
     git \
     perl \
     g++ \
-    curl
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -46,16 +45,15 @@ COPY src ./src
 
 # 设置环境变量
 ENV OPENSSL_DIR=/usr \
-    CMAKE_MAKE_PROGRAM=/usr/bin/make \
-    LIBCLANG_PATH=/usr/lib
+    LIBCLANG_PATH=/usr/lib/x86_64-linux-gnu
 
 # 构建 release 版本
 RUN cargo build --release
 
-# 运行阶段
+# 运行阶段 - 使用 Alpine 保持镜像小巧
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates libssl3
+RUN apk add --no-cache ca-certificates libssl3 libgcc
 
 WORKDIR /app
 
