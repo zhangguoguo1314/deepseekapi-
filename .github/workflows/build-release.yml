@@ -38,15 +38,15 @@ jobs:
       run: |
         cargo build --release
 
-    - name: Copy binary to repo
+    - name: Copy binary
       run: |
         mkdir -p bin
         cp target/release/ds-free-api bin/ds-free-api
         chmod +x bin/ds-free-api
 
-    - name: Commit and push binary
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add bin/ds-free-api
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Add prebuilt binary" && git push)
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ds-free-api-binary
+        path: bin/ds-free-api
+        retention-days: 7
