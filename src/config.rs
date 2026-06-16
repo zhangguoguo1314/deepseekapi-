@@ -293,9 +293,9 @@ impl Config {
                     ..Default::default()
                 },
                 server: ServerConfig {
-                    host: "127.0.0.1".into(),
-                    port: 22217,
-                    cors_origins: default_cors_origins(),
+                    host: "0.0.0.0".into(),
+                    port: 7860,
+                    cors_origins: vec!["*".to_string()],
                 },
                 proxy: ProxyConfig::default(),
                 admin: AdminConfig::default(),
