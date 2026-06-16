@@ -5,18 +5,10 @@ RUN apk add --no-cache musl-dev openssl-dev pkgconfig
 
 WORKDIR /app
 
-# 复制依赖文件
-COPY Cargo.toml Cargo.lock ./
-COPY ds_core/Cargo.toml ds_core/
-
-# 创建虚拟 main.rs 来缓存依赖
-RUN mkdir -p src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release && rm -rf src
-
 # 复制完整源码
 COPY . .
 
-# 重新构建（只编译修改的部分）
+# 构建 release 版本
 RUN cargo build --release
 
 # 运行阶段
