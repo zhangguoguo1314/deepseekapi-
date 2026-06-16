@@ -7,16 +7,14 @@ WORKDIR /app/web
 COPY web/package.json web/bun.lock ./
 RUN bun install --frozen-lockfile
 
-# 复制前端源码
+# 复制前端源码并构建
 COPY web/ .
-
-# 构建前端
 RUN bun run build
 
 # Rust 构建阶段
 FROM rust:1.95-alpine AS rust-builder
 
-# 安装构建依赖
+# 安装构建依赖（boring-sys 需要 cmake/clang）
 RUN apk add --no-cache \
     musl-dev \
     openssl-dev \
@@ -27,19 +25,20 @@ RUN apk add --no-cache \
     linux-headers \
     git \
     perl \
-    g++
+    g++ \
+    make
 
 WORKDIR /app
 
-# 复制 Cargo 文件
+# 先复制 workspace 配置和 ds_core
 COPY Cargo.toml Cargo.lock ./
 COPY ds_core/Cargo.toml ds_core/
 COPY ds_core/src ds_core/src/
 
-# 复制前端构建结果
+# 复制前端构建结果到正确位置
 COPY --from=web-builder /app/web/dist ./web/dist
 
-# 复制 Rust 源码
+# 复制主程序源码
 COPY src ./src
 
 # 设置环境变量
@@ -59,7 +58,7 @@ WORKDIR /app
 COPY --from=rust-builder /app/target/release/ds-free-api /app/ds-free-api
 
 # 创建配置目录和数据目录
-RUN mkdir -p /app/config /app/data
+RUN mkdir -p /app/config /app/data /app/logs
 
 # 设置环境变量（HF 适配）
 ENV RUST_LOG=info \
