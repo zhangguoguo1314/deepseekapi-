@@ -14,7 +14,7 @@ RUN bun run build
 # Rust 构建阶段
 FROM rust:1.95-alpine AS rust-builder
 
-# 安装构建依赖（boring-sys 需要 cmake/make/clang）
+# 安装构建依赖（boring-sys 需要 cmake/make/clang/libclang）
 RUN apk add --no-cache \
     musl-dev \
     openssl-dev \
@@ -22,6 +22,8 @@ RUN apk add --no-cache \
     cmake \
     make \
     clang \
+    clang-dev \
+    libclang \
     llvm-dev \
     linux-headers \
     git \
@@ -44,7 +46,8 @@ COPY src ./src
 
 # 设置环境变量
 ENV OPENSSL_DIR=/usr \
-    CMAKE_MAKE_PROGRAM=/usr/bin/make
+    CMAKE_MAKE_PROGRAM=/usr/bin/make \
+    LIBCLANG_PATH=/usr/lib
 
 # 构建 release 版本
 RUN cargo build --release
