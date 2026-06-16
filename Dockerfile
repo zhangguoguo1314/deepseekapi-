@@ -11,12 +11,11 @@ RUN bun install --frozen-lockfile
 COPY web/ .
 RUN bun run build
 
-# Rust 构建阶段 - 使用 Debian 基础镜像（Alpine 缺少 libclang）
-FROM rust:1.95-slim-bookworm AS rust-builder
+# Rust 构建阶段 - 使用 messense/rust-musl-cross 支持 musl 静态链接
+FROM messense/rust-musl-cross:x86_64-musl AS rust-builder
 
 # 安装构建依赖
 RUN apt-get update && apt-get install -y \
-    musl-tools \
     libssl-dev \
     pkg-config \
     cmake \
@@ -47,18 +46,18 @@ COPY src ./src
 ENV OPENSSL_DIR=/usr \
     LIBCLANG_PATH=/usr/lib/x86_64-linux-gnu
 
-# 构建 release 版本
-RUN cargo build --release
+# 构建 musl 静态链接版本
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# 运行阶段 - 使用 Alpine 保持镜像小巧
+# 运行阶段 - 使用 Alpine
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates libssl3 libgcc
+RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-# 从构建阶段复制二进制文件
-COPY --from=rust-builder /app/target/release/ds-free-api /app/ds-free-api
+# 从构建阶段复制二进制文件（musl 静态链接，无需 libgcc）
+COPY --from=rust-builder /app/target/x86_64-unknown-linux-musl/release/ds-free-api /app/ds-free-api
 
 # 创建配置目录和数据目录
 RUN mkdir -p /app/config /app/data /app/logs
