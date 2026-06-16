@@ -1,9 +1,12 @@
 # 使用预构建二进制文件的 Dockerfile
 # 二进制文件由 GitHub Actions 构建并提交到 bin/ 目录
 
-FROM alpine:3.21
+FROM debian:bookworm-slim
 
-RUN apk add --no-cache ca-certificates
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

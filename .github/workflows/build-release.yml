@@ -14,16 +14,11 @@ jobs:
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: x86_64-unknown-linux-musl
-
-    - name: Install musl target
-      run: rustup target add x86_64-unknown-linux-musl
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y musl-tools libssl-dev pkg-config cmake make clang libclang-dev llvm-dev git perl g++ curl
+        sudo apt-get install -y libssl-dev pkg-config cmake make clang libclang-dev llvm-dev git perl g++ curl
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
@@ -41,12 +36,12 @@ jobs:
         OPENSSL_DIR: /usr
         LIBCLANG_PATH: /usr/lib/x86_64-linux-gnu
       run: |
-        cargo build --release --target x86_64-unknown-linux-musl
+        cargo build --release
 
     - name: Copy binary to repo
       run: |
         mkdir -p bin
-        cp target/x86_64-unknown-linux-musl/release/ds-free-api bin/ds-free-api
+        cp target/release/ds-free-api bin/ds-free-api
         chmod +x bin/ds-free-api
 
     - name: Commit and push binary
