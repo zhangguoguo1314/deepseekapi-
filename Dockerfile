@@ -4,7 +4,7 @@ FROM oven/bun:alpine AS web-builder
 WORKDIR /app/web
 
 # 复制前端依赖文件
-COPY web/package.json web/bun.lockb ./
+COPY web/package.json web/bun.lock ./
 RUN bun install --frozen-lockfile
 
 # 复制前端源码
