@@ -1,0 +1,54 @@
+name: Build and Release Binary
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-action@stable
+      with:
+        targets: x86_64-unknown-linux-musl
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y musl-tools libssl-dev pkg-config cmake make clang libclang-dev llvm-dev git perl g++ curl
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+
+    - name: Build frontend
+      run: |
+        cd web
+        bun install
+        bun run build
+
+    - name: Build binary
+      env:
+        OPENSSL_DIR: /usr
+        LIBCLANG_PATH: /usr/lib/x86_64-linux-gnu
+      run: |
+        cargo build --release --target x86_64-unknown-linux-musl
+
+    - name: Copy binary to repo
+      run: |
+        mkdir -p bin
+        cp target/x86_64-unknown-linux-musl/release/ds-free-api bin/ds-free-api
+        chmod +x bin/ds-free-api
+
+    - name: Commit and push binary
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add bin/ds-free-api
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Add prebuilt binary" && git push)

@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "Please wait for GitHub Actions to build the binary"

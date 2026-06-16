@@ -1,63 +1,15 @@
-# 前端构建阶段
-FROM oven/bun:alpine AS web-builder
+# 使用预构建二进制文件的 Dockerfile
+# 二进制文件由 GitHub Actions 构建并提交到 bin/ 目录
 
-WORKDIR /app/web
-
-# 复制前端依赖文件
-COPY web/package.json web/bun.lock ./
-RUN bun install --frozen-lockfile
-
-# 复制前端源码并构建
-COPY web/ .
-RUN bun run build
-
-# Rust 构建阶段 - 使用 messense/rust-musl-cross 支持 musl 静态链接
-FROM messense/rust-musl-cross:x86_64-musl AS rust-builder
-
-# 安装构建依赖
-RUN apt-get update && apt-get install -y \
-    libssl-dev \
-    pkg-config \
-    cmake \
-    make \
-    clang \
-    libclang-dev \
-    llvm-dev \
-    git \
-    perl \
-    g++ \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# 先复制 workspace 配置和 ds_core
-COPY Cargo.toml Cargo.lock ./
-COPY ds_core/Cargo.toml ds_core/
-COPY ds_core/src ds_core/src/
-
-# 复制前端构建结果到正确位置
-COPY --from=web-builder /app/web/dist ./web/dist
-
-# 复制主程序源码
-COPY src ./src
-
-# 设置环境变量
-ENV OPENSSL_DIR=/usr \
-    LIBCLANG_PATH=/usr/lib/x86_64-linux-gnu
-
-# 构建 musl 静态链接版本
-RUN cargo build --release --target x86_64-unknown-linux-musl
-
-# 运行阶段 - 使用 Alpine
 FROM alpine:3.21
 
 RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-# 从构建阶段复制二进制文件（musl 静态链接，无需 libgcc）
-COPY --from=rust-builder /app/target/x86_64-unknown-linux-musl/release/ds-free-api /app/ds-free-api
+# 复制预构建的二进制文件
+COPY bin/ds-free-api /app/ds-free-api
+RUN chmod +x /app/ds-free-api
 
 # 创建配置目录和数据目录
 RUN mkdir -p /app/config /app/data /app/logs
